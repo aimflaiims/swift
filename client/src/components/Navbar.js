@@ -32,6 +32,18 @@ class Navbar extends Component {
                   Closefit
                 </Link>
               </li>
+              <li className="nav-item">
+                <Link className="nav-link" to="/onetomany">
+                  {" "}
+                  One To Many
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link className="nav-link" to="/nettedtransactions">
+                  {" "}
+                  Netted Transactions
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
