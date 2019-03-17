@@ -29,10 +29,10 @@ class Closefit extends Component {
 
   render() {
     return (
-      <div class="container">
+      <div className="container">
         <h2>Closefit</h2>
         <p>These are the closefit results:</p>
-        <table class="table table-hover">
+        <table className="table table-hover">
           <thead>
             <tr>
               <th>Our Reference</th>

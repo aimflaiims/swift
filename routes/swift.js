@@ -6,7 +6,7 @@ var router = express.Router();
 /* GET matched data listing. */
 router.get("/", function(req, res, next) {
   connection.query(
-    "SELECT sgswift.20 as sg_ref, clientswift.`20` as cref FROM `sgswift` join`clientswift` on`sgswift`.`82A` = `clientswift`.`87A` and sgswift.87A = clientswift.82A and`sgswift`.`77H` = `clientswift`.`77H` and`sgswift`.`30T` = `clientswift`.`30T` and`sgswift`.`30V` = `clientswift`.`30V` and`sgswift`.`36` = `clientswift`.`36` and`sgswift`.`32B` = `clientswift`.`33B` and`sgswift`.`56A` = `clientswift`.`56D` and`sgswift`.`57A` = `clientswift`.`57D` and`sgswift`.`58A` = `clientswift`.`58D` and`sgswift`.`33B` = `clientswift`.`32B`",
+    "SELECT sgswift.20 as sg_ref, clientswift.`20` as cref FROM `sgswift` join`clientswift` on `sgswift`.`82A` = `clientswift`.`87A` where sgswift.87A = clientswift.82A and`sgswift`.`77H` = `clientswift`.`77H` and`sgswift`.`30T` = `clientswift`.`30T` and`sgswift`.`30V` = `clientswift`.`30V` and`sgswift`.`36` = `clientswift`.`36` and`sgswift`.`32B` = `clientswift`.`33B` and`sgswift`.`56A` = `clientswift`.`56D` and`sgswift`.`57A` = `clientswift`.`57D` and`sgswift`.`58A` = `clientswift`.`58D` and`sgswift`.`33B` = `clientswift`.`32B`",
     function(error, results, fields) {
       if (error) {
         // res.send(JSON.stringify({ status: 500, error: error, response: null }));
@@ -42,7 +42,7 @@ router.get("/closefit", function(req, res, next) {
 /* GET searched data listing. */
 router.post("/search", function(req, res, next) {
   connection.query(
-    "SELECT * FROM `sgswift` UNION select * from`clientswift`",
+    "SELECT * FROM `sgswift` UNION select * from `clientswift`",
     function(error, results, fields) {
       if (error) {
         // res.send(JSON.stringify({ status: 500, error: error, response: null }));
@@ -60,17 +60,55 @@ router.post("/search", function(req, res, next) {
 });
 
 /* GET one to many data listing. */
-router.get("/onetomany", function(req, res, next) {
+router.get("/manytoone", function(req, res, next) {
   connection.query(
-    "SELECT sgswift.20 as sg_ref, clientswift.`20` as cref, ((`sgswift`.`30V` = `clientswift`.`30V`)+(`sgswift`.`36` = `clientswift`.`36`)+(`sgswift`.`32B` = `clientswift`.`33B`)+(`sgswift`.`33B` = `clientswift`.`32B`)) as matches FROM `sgswift` join`clientswift` on`sgswift`.`82A` = `clientswift`.`87A` and sgswift.87A = clientswift.82A and`sgswift`.`77H` = `clientswift`.`77H` and`sgswift`.`30T` = `clientswift`.`30T` and`sgswift`.`56A` = `clientswift`.`56D` and`sgswift`.`57A` = `clientswift`.`57D` and`sgswift`.`58A` = `clientswift`.`58D` HAVING matches > 1 and matches < 4",
-    function(error, results, fields) {
+    "SELECT otm_sgswift.20, sum(otm_sgswift.amount1) as sum2, sum(otm_sgswift.amount2) as sum1, otm_clientswift.* FROM `otm_sgswift` join`otm_clientswift` on`otm_sgswift`.`82A` = `otm_clientswift`.`87A` where otm_sgswift.87A = otm_clientswift.82A and`otm_sgswift`.`30T` = `otm_clientswift`.`30T` and`otm_sgswift`.`56A` = `otm_clientswift`.`56D` and`otm_sgswift`.`57A` = `otm_clientswift`.`57D` and`otm_sgswift`.`58A` = `otm_clientswift`.`58D` and`otm_sgswift`.`30V` = `otm_clientswift`.`30V` and`otm_sgswift`.`36` = `otm_clientswift`.`36` and`otm_sgswift`.`ccy1` = `otm_clientswift`.`ccy2` and`otm_sgswift`.`ccy2` = `otm_clientswift`.`ccy1` and`otm_sgswift`.`77H` = `otm_clientswift`.`77H` group by otm_clientswift.20 having sum1 = otm_clientswift.amount1 and sum2 = otm_clientswift.amount2",
+    async function(error, results, fields) {
+      const sgRecords = {};
       if (error) {
         res.status(404).json(error);
         //If there is error, we send the error in the error section with 500 status
       } else {
-        res.json(results);
+        for (let index = 0; index < results.length; index++) {
+          var q =
+            "Select * from otm_sgswift where otm_sgswift.87A = '" +
+            results[index]["82A"] +
+            "' and `otm_sgswift`.`30T` = '" +
+            results[index]["30T"] +
+            "' and`otm_sgswift`.`56A` = '" +
+            results[index]["56D"] +
+            "' and`otm_sgswift`.`57A` = '" +
+            results[index]["57D"] +
+            "' and`otm_sgswift`.`58A` = '" +
+            results[index]["58D"] +
+            "' and`otm_sgswift`.`30V` = '" +
+            results[index]["30V"] +
+            "' and`otm_sgswift`.`36` = " +
+            results[index]["36"] +
+            " and `otm_sgswift`.`ccy1` = '" +
+            results[index]["ccy2"] +
+            "' and `otm_sgswift`.`ccy2` = '" +
+            results[index]["ccy1"] +
+            "' and `otm_sgswift`.`77H` = '" +
+            results[index]["77H"] +
+            "' ";
+          connection.query(q, function(error, result, fields) {
+            if (error) {
+              // res.status(404).json(error);
+              //If there is error, we send the error in the error section with 500 status
+            } else {
+              sgRecords[index] = result;
+              // res.json(results);
+              // return;
+              //If there is no error, all is good and response is 200OK.
+            }
+          });
+        }
+
+        // res.json(sgRecords);
         //If there is no error, all is good and response is 200OK.
       }
+      console.log(results);
     }
   );
 });
